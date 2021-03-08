@@ -49,15 +49,15 @@ def retrieve_drinks():
 '''
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def retrieve_drinks_detail():
-    drinks = Drink.query.all()
+def retrieve_drinks_detail(payload):
+  drinks = Drink.query.all()
 
-    drinksFormatted = [drink.long() for drink in drinks]
+  drinksFormatted = [drink.long() for drink in drinks]
 
-    return jsonify({
-        'success': True,
-        'drinks': drinksFormatted
-    })
+  return jsonify({
+    'success': True,
+    'drinks': drinksFormatted
+  })
 
 '''
 @TODO implement endpoint
@@ -70,7 +70,7 @@ def retrieve_drinks_detail():
 '''
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def create_drink():
+def create_drink(payload):
     body = request.get_json()
 
     new_title = body.get('title', None)
@@ -103,8 +103,8 @@ def create_drink():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<int:id>', methods=['PATCH'])
-# @requires_auth('patch:drinks')
-def update_drink(id):
+@requires_auth('patch:drinks')
+def update_drink(payload,id):
     try:
       body = request.get_json()
       drink = Drink.query.filter(Drink.id == id).one_or_none()
@@ -114,14 +114,15 @@ def update_drink(id):
 
       if 'title' in body:
         drink.title = body.get('title', None)
-      if 'content' in body:
+      if 'recipe' in body:
         drink.recipe =json.dumps(body.get('recipe', None))
 
       drink.update()
+      drinksFormatted = [drink.long()]
 
       return jsonify({
         'success': True,
-        'drinks': drink.long()
+        'drinks': drinksFormatted
       })
 
     except:
@@ -139,7 +140,7 @@ def update_drink(id):
 '''
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(id):
+def delete_drink(payload,id):
     try:
       drink = Drink.query.filter(Drink.id == id).one_or_none()
 
@@ -240,7 +241,6 @@ def not_found_error(error):
                     "error": 404,
                     "message": "resource not found"
                     }), 404
-
 
 '''
 @TODO implement error handler for AuthError
